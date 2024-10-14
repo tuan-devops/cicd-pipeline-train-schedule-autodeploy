@@ -1,9 +1,19 @@
 pipeline {
     agent any
+
+    tools {
+        jdk 'jdk8'
+    }
+    
+    triggers {
+        githubPush()
+    }
+    
     environment {
         DOCKER_IMAGE_NAME = "tuandevops/train-schedule"
         CANARY_REPLICAS = 0
     }
+    
     stages {
         stage('Build') {
             steps {
@@ -12,6 +22,7 @@ pipeline {
                 archiveArtifacts artifacts: 'dist/trainSchedule.zip'
             }
         }
+        
         stage('Build Docker Image') {
             when {
                 branch 'master'
@@ -25,6 +36,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Push Docker Image') {
             when {
                 branch 'master'
@@ -38,6 +50,7 @@ pipeline {
                 }
             }
         }
+        
         stage('CanaryDeploy') {
             when {
                 branch 'master'
@@ -53,6 +66,7 @@ pipeline {
                 )
             }
         }
+        
         stage('SmokeTest') {
             when {
                 branch 'master'
@@ -70,6 +84,7 @@ pipeline {
                 }
             }
         }
+        
         stage('DeployToProduction') {
             when {
                 branch 'master'
@@ -84,6 +99,7 @@ pipeline {
             }
         }
     }
+    
     post {
         cleanup {
             kubernetesDeploy (
